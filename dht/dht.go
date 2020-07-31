@@ -4,11 +4,9 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
-
 	"net"
 
 	"github.com/marksamman/bencode"
-	//"github.com/jackpal/bencode-go"
 )
 
 var seed = []string{
@@ -18,19 +16,23 @@ var seed = []string{
 }
 
 type DHT struct {
-	Host     string
-	NodeList *list.List
-	Conn     *net.UDPConn
-	Id       string
+	Host        string
+	NodeList    *list.List
+	Conn        *net.UDPConn
+	Id          string
+	RequestList chan string
+	DataList    chan ByteBuf
 }
 
 type handleFunc func(d *DHT)
 
 func NewDHT(host string) *DHT {
 	return &DHT{
-		Host:     host,
-		NodeList: list.New(),
-		Id:       RandString(20),
+		Host:        host,
+		NodeList:    list.New(),
+		Id:          RandString(20),
+		RequestList: make(chan string, 2048),
+		DataList:    make(chan ByteBuf, 2048),
 	}
 }
 
@@ -43,15 +45,17 @@ func (d *DHT) Start() error {
 	if err != nil {
 		return err
 	}
-	d.rung("readRequest", d.readRequest)
-	d.rung("sendResponse", d.sendResponse)
-	d.initSend()
+
+	d.rung("sendRequest", d.sendRequest)
+	d.rung("handleData", d.handleData)
+	d.rung("readResponse", d.readResponse)
+	d.addSend()
 	return nil
 }
 
-func (d *DHT) initSend() {
-	fmt.Println(d.Id)
+func (d *DHT) addSend() {
 	for _, addr := range seed {
+		d.RequestList <- addr
 		udpAddr, err := net.ResolveUDPAddr("udp", addr)
 		if err != nil {
 			fmt.Printf("resoveSeed error : %s\n", err.Error())
@@ -84,24 +88,67 @@ func (d *DHT) rung(name string, localFunc func()) {
 	go f()
 }
 
-func (d *DHT) sendResponse() {
+func (d *DHT) sendRequest() {
+	for {
+		select {
+		case oneAddr := <-d.RequestList:
+			udpAddr, err := net.ResolveUDPAddr("udp", oneAddr)
+			if err != nil {
+				fmt.Printf("resoveAddr error : %s\n", err.Error())
+				continue
+			}
+			req := MakeRequest("find_node", d.Id, RandString(20))
 
+			_, err = d.Conn.WriteToUDP(bencode.Encode(req), udpAddr)
+			if err != nil {
+				fmt.Printf("send seed err:%s", err.Error())
+			}
+			if len(d.RequestList) == 0 {
+				d.addSend()
+			}
+		}
+	}
 }
 
-func (d *DHT) readRequest() {
-	byteBuf := make([]byte, 526)
-	readBuf := bytes.NewBuffer(byteBuf)
+func (d *DHT) readResponse() {
+	readBuf := NewBufferByte()
 	for {
 		fmt.Println("Begin_Read")
-		n, addr, err := d.Conn.ReadFromUDP(readBuf.Bytes())
+		_, _, err := d.Conn.ReadFromUDP(readBuf)
 		if err != nil {
-			fmt.Println("read err:%s", err.Error())
+			fmt.Printf("read err:%s", err.Error())
 			continue
 		}
-		fmt.Println(addr.String())
-		fmt.Println(n)
-		fmt.Println(readBuf.String())
-		fmt.Println("finish read")
+		d.DataList <- readBuf
+	}
+}
+
+func (d *DHT) handleData() {
+	for {
+		select {
+		case data := <-d.DataList:
+			{
+				msg, err := bencode.Decode(bytes.NewBuffer(data))
+				if err != nil {
+					fmt.Printf("decode buf error:%s\n", err.Error())
+					continue
+				}
+				y, ok := msg["y"].(string)
+				if !ok {
+					fmt.Printf("msg y is not string\n")
+					continue
+				}
+
+				if y == "q" {
+					fmt.Println(msg)
+				} else if y == "r" {
+					fmt.Println(msg)
+				} else if y == "e" {
+					e, _ := msg["e"].(string)
+					fmt.Printf("msg get a err :%s\n", e)
+				}
+			}
+		}
 	}
 
 }
