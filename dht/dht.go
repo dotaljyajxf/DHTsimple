@@ -21,7 +21,7 @@ type DHT struct {
 	Conn        *net.UDPConn
 	Id          string
 	RequestList chan string
-	DataList    chan ByteBuf
+	DataList    chan map[string]interface{}
 }
 
 type handleFunc func(d *DHT)
@@ -32,7 +32,7 @@ func NewDHT(host string) *DHT {
 		NodeList:    list.New(),
 		Id:          RandString(20),
 		RequestList: make(chan string, 2048),
-		DataList:    make(chan ByteBuf, 2048),
+		DataList:    make(chan map[string]interface{}, 2048),
 	}
 }
 
@@ -56,21 +56,21 @@ func (d *DHT) Start() error {
 func (d *DHT) addSend() {
 	for _, addr := range seed {
 		d.RequestList <- addr
-		udpAddr, err := net.ResolveUDPAddr("udp", addr)
-		if err != nil {
-			fmt.Printf("resoveSeed error : %s\n", err.Error())
-			continue
-		}
-		req := make(map[string]interface{})
-		req["t"] = RandString(2)
-		req["y"] = "q"
-		req["q"] = "find_node"
-		req["a"] = map[string]interface{}{"id": d.Id, "target": RandString(20)}
-
-		_, err = d.Conn.WriteToUDP(bencode.Encode(req), udpAddr)
-		if err != nil {
-			fmt.Printf("send seed err:%s", err.Error())
-		}
+		//udpAddr, err := net.ResolveUDPAddr("udp", addr)
+		//if err != nil {
+		//	fmt.Printf("resoveSeed error : %s\n", err.Error())
+		//	continue
+		//}
+		//req := make(map[string]interface{})
+		//req["t"] = RandString(2)
+		//req["y"] = "q"
+		//req["q"] = "find_node"
+		//req["a"] = map[string]interface{}{"id": d.Id, "target": RandString(20)}
+		//
+		//_, err = d.Conn.WriteToUDP(bencode.Encode(req), udpAddr)
+		//if err != nil {
+		//	fmt.Printf("send seed err:%s", err.Error())
+		//}
 
 	}
 }
@@ -113,13 +113,18 @@ func (d *DHT) sendRequest() {
 func (d *DHT) readResponse() {
 	readBuf := NewBufferByte()
 	for {
-		fmt.Println("Begin_Read")
-		_, _, err := d.Conn.ReadFromUDP(readBuf)
+		//fmt.Println("Begin_Read")
+		n, _, err := d.Conn.ReadFromUDP(readBuf)
 		if err != nil {
 			fmt.Printf("read err:%s", err.Error())
 			continue
 		}
-		d.DataList <- readBuf
+		msg, err := bencode.Decode(bytes.NewBuffer(readBuf[:n]))
+		if err != nil {
+			fmt.Printf("decode buf error:%s\n", err.Error())
+			continue
+		}
+		d.DataList <- msg
 	}
 }
 
@@ -128,23 +133,23 @@ func (d *DHT) handleData() {
 		select {
 		case data := <-d.DataList:
 			{
-				msg, err := bencode.Decode(bytes.NewBuffer(data))
-				if err != nil {
-					fmt.Printf("decode buf error:%s\n", err.Error())
-					continue
-				}
-				y, ok := msg["y"].(string)
+				//msg, err := bencode.Decode(bytes.NewBuffer(data))
+				//if err != nil {
+				//	fmt.Printf("decode buf error:%s\n", err.Error())
+				//	continue
+				//}
+				y, ok := data["y"].(string)
 				if !ok {
 					fmt.Printf("msg y is not string\n")
 					continue
 				}
 
 				if y == "q" {
-					fmt.Println(msg)
+					fmt.Println(data)
 				} else if y == "r" {
-					fmt.Println(msg)
+					fmt.Println(data)
 				} else if y == "e" {
-					e, _ := msg["e"].(string)
+					e, _ := data["e"].(string)
 					fmt.Printf("msg get a err :%s\n", e)
 				}
 			}
