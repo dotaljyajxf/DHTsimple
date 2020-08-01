@@ -207,10 +207,18 @@ func (d *DHT) handleData() {
 					case "find_node":
 						d.doFindNode(remoteAddr, t)
 					case "get_peers":
-						rId, _ := data["id"].(string)
-						d.doGetPeer(rId, remoteAddr, t)
+						a, ok := data["a"].(map[string]interface{})
+						if !ok {
+							fmt.Printf("get peer no arg\n")
+							break
+						}
+						d.doGetPeer(a, remoteAddr, t)
 					case "announce_peer":
-						a, _ := data["a"].(map[string]interface{})
+						a, ok := data["a"].(map[string]interface{})
+						if !ok {
+							fmt.Printf("announce_peer no arg\n")
+							break
+						}
 						d.doAnnouncePeer(remoteAddr, t, a)
 					}
 				} else if y == "r" {
@@ -250,8 +258,23 @@ func (d *DHT) doFindNode(addr *net.UDPAddr, t string) {
 	d.ResponseList <- resp
 }
 
-func (d *DHT) doGetPeer(id string, addr *net.UDPAddr, t string) {
+func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string) {
 	fmt.Println("doGetPeer")
+
+	id, ok := arg["id"].(string)
+	if !ok {
+		fmt.Println("doGetPeer no id")
+		return
+	}
+
+	infoHash, ok := arg["info_hash"].(string)
+	if !ok {
+		fmt.Println("doGetPeer no info_hash")
+		return
+	}
+
+	GetHash(infoHash)
+
 	r := make(map[string]interface{})
 	r["nodes"] = ""
 	r["token"] = MakeToken(addr.String())
