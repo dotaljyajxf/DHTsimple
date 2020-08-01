@@ -189,7 +189,7 @@ func (d *DHT) handleData() {
 			{
 				y, ok := data["y"].(string)
 				if !ok {
-					fmt.Printf("msg y is not string\n")
+					fmt.Printf("msg y is not string: %v\n", data)
 					continue
 				}
 				t, ok := data["t"].(string)

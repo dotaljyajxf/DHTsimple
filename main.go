@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	d := dht.NewDHT("0.0.0.0:12121", 800)
+	d := dht.NewDHT("0.0.0.0:12121", 1000)
 	err := d.Start()
 
 	if err != nil {
