@@ -1,6 +1,9 @@
 package dht
 
-import "fmt"
+import (
+	"encoding/hex"
+	"fmt"
+)
 
 func GetHash(hash string, from string) {
 	ret := ""
@@ -13,4 +16,5 @@ func GetHash(hash string, from string) {
 	ret += "\\0"
 
 	fmt.Println(from, " ", ret)
+	fmt.Println(from, "_HEX ", hex.EncodeToString([]byte(hash)))
 }

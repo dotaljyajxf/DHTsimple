@@ -269,7 +269,7 @@ func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string)
 		return
 	}
 
-	//GetHash(infoHash, "GET_PEER")
+	GetHash(infoHash, "GET_PEER")
 
 	r := make(map[string]interface{})
 	r["nodes"] = ""
@@ -281,16 +281,16 @@ func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string)
 }
 
 func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interface{}) {
-	token, ok := arg["token"].(string)
-	if !ok {
-		fmt.Println("doAnnouncePeer no token")
-		return
-	}
+	//token, ok := arg["token"].(string)
+	//if !ok {
+	//	fmt.Println("doAnnouncePeer no token")
+	//	return
+	//}
 
-	if !ValidateToken(token, addr.String()) {
-		fmt.Println("doAnnouncePeer token un match")
-		return
-	}
+	//if !ValidateToken(token, addr.String()) {
+	//	fmt.Println("doAnnouncePeer token un match")
+	//	return
+	//}
 
 	infoHash, ok := arg["info_hash"].(string)
 	if !ok {
