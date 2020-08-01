@@ -269,7 +269,7 @@ func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string)
 		return
 	}
 
-	GetHash(infoHash, "GET_PEER")
+	//GetHash(infoHash, "GET_PEER")
 
 	r := make(map[string]interface{})
 	r["nodes"] = ""
