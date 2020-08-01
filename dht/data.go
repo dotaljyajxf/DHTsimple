@@ -3,7 +3,6 @@ package dht
 import "fmt"
 
 func GetHash(hash string, from string) {
-	fmt.Println(from, " ", hash)
 	ret := ""
 	str := "0123456789abcdef"
 	for i := 0; i < 20; i++ {
@@ -13,5 +12,5 @@ func GetHash(hash string, from string) {
 	}
 	ret += "\\0"
 
-	fmt.Println(ret)
+	fmt.Println(from, " ", ret)
 }
