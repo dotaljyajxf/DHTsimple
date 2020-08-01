@@ -151,6 +151,9 @@ func (d *DHT) sendRequest() {
 
 func (d *DHT) sendResponse() {
 	for {
+		if !d.Limiter.Allow() {
+			continue
+		}
 		select {
 		case resp := <-d.ResponseList:
 
