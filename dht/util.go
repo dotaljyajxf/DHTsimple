@@ -59,7 +59,7 @@ func neighborId(nodeId string, target string) string {
 func MakeRequest(method string, nodeId string, target string) map[string]interface{} {
 	ret := make(map[string]interface{})
 	ret["t"] = RandString(2)
-	ret["y"] = 'q'
+	ret["y"] = "q"
 	ret["q"] = method
 	ret["a"] = map[string]interface{}{"id": neighborId(nodeId, target), "target": RandString(20)}
 
@@ -69,7 +69,7 @@ func MakeRequest(method string, nodeId string, target string) map[string]interfa
 func MakeResponse(t string, r map[string]interface{}) map[string]interface{} {
 	ret := make(map[string]interface{})
 	ret["t"] = t
-	ret["y"] = 'r'
+	ret["y"] = "r"
 	ret["r"] = r
 
 	return ret

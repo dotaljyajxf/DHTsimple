@@ -132,7 +132,7 @@ func (d *DHT) sendRequest() {
 				continue
 			}
 			//req := MakeRequest("find_node", d.Id, RandString(20))
-			fmt.Println("send  find_node to ", udpAddr.String())
+			//fmt.Println("send  find_node to ", udpAddr.String())
 			_, err = d.Conn.WriteToUDP(bencode.Encode(req.Req), udpAddr)
 			if err != nil {
 				fmt.Printf("send seed err:%s", err.Error())
@@ -280,7 +280,7 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 }
 
 func (d DHT) decodeNodes(r map[string]interface{}) {
-	fmt.Println("decodeNodes")
+	//fmt.Println("decodeNodes")
 	nodes, ok := r["nodes"].(string)
 	if !ok {
 		fmt.Println("r not have nodes")
