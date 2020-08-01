@@ -245,7 +245,6 @@ func (d *DHT) handleData() {
 }
 
 func (d *DHT) doPing(addr *net.UDPAddr, t string) {
-	fmt.Println("doPing")
 	resp := new(Response)
 	resp.R = map[string]interface{}{"id": d.Id}
 	resp.T = t
@@ -255,7 +254,6 @@ func (d *DHT) doPing(addr *net.UDPAddr, t string) {
 }
 
 func (d *DHT) doFindNode(addr *net.UDPAddr, t string) {
-	fmt.Println("doFindNode")
 	r := make(map[string]interface{})
 	r["nodes"] = ""
 	r["id"] = d.Id
@@ -264,7 +262,6 @@ func (d *DHT) doFindNode(addr *net.UDPAddr, t string) {
 }
 
 func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string) {
-	fmt.Println("doGetPeer")
 
 	infoHash, ok := arg["info_hash"].(string)
 	if !ok {
@@ -272,7 +269,7 @@ func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string)
 		return
 	}
 
-	GetHash(infoHash)
+	GetHash(infoHash, "GET_PEER")
 
 	r := make(map[string]interface{})
 	r["nodes"] = ""
@@ -284,7 +281,6 @@ func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string)
 }
 
 func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interface{}) {
-	fmt.Println("doAnnouncePeer")
 	token, ok := arg["token"].(string)
 	if !ok {
 		fmt.Println("doAnnouncePeer no token")
@@ -302,7 +298,7 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 		return
 	}
 
-	GetHash(infoHash)
+	GetHash(infoHash, "ANNOUNCE_PEER")
 
 	r := make(map[string]interface{})
 	r["id"] = d.Id
