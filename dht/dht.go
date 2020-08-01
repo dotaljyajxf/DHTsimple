@@ -3,6 +3,7 @@ package dht
 import (
 	"bytes"
 	"container/list"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -127,9 +128,7 @@ func (d *DHT) rung(name string, localFunc func()) {
 
 func (d *DHT) sendRequest() {
 	for {
-		if !d.Limiter.Allow() {
-			continue
-		}
+		d.Limiter.Wait(context.Background())
 		select {
 		case req := <-d.RequestList:
 
@@ -138,7 +137,7 @@ func (d *DHT) sendRequest() {
 				fmt.Printf("resoveAddr error : %s\n", err.Error())
 				continue
 			}
-			fmt.Println(len(bencode.Encode(req.Req)))
+			//fmt.Println(len(bencode.Encode(req.Req)))
 			//req := MakeRequest("find_node", d.Id, RandString(20))
 			//fmt.Println("send  find_node to ", udpAddr.String())
 			_, err = d.Conn.WriteToUDP(bencode.Encode(req.Req), udpAddr)
@@ -151,9 +150,7 @@ func (d *DHT) sendRequest() {
 
 func (d *DHT) sendResponse() {
 	for {
-		if !d.Limiter.Allow() {
-			continue
-		}
+		d.Limiter.Wait(context.Background())
 		select {
 		case resp := <-d.ResponseList:
 
