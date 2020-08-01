@@ -179,7 +179,6 @@ func (d *DHT) handleData() {
 		select {
 		case data := <-d.DataList:
 			{
-				fmt.Println("read  data")
 				y, ok := data["y"].(string)
 				if !ok {
 					fmt.Printf("msg y is not string\n")
@@ -213,8 +212,8 @@ func (d *DHT) handleData() {
 					}
 					d.decodeNodes(r)
 				} else if y == "e" {
-					e, _ := data["e"].(string)
-					fmt.Printf("msg get a err :%s\n", e)
+					e, _ := data["e"]
+					fmt.Printf("msg get a err :%v\n", e)
 				}
 			}
 		}
