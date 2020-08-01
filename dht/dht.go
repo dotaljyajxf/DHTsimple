@@ -139,7 +139,7 @@ func (d *DHT) sendRequest() {
 			}
 			//fmt.Println(len(bencode.Encode(req.Req)))
 			//req := MakeRequest("find_node", d.Id, RandString(20))
-			fmt.Println("send  find_node to ", udpAddr.String())
+			//fmt.Println("send  find_node to ", udpAddr.String())
 			_, err = d.Conn.WriteToUDP(bencode.Encode(req.Req), udpAddr)
 			if err != nil {
 				fmt.Printf("send seed err:%s", err.Error())
@@ -222,6 +222,8 @@ func (d *DHT) handleData() {
 				} else if y == "e" {
 					e, _ := data["e"]
 					fmt.Printf("msg get a err :%v\n", e)
+				} else {
+					fmt.Printf("Unknow msg :%v\n", data)
 				}
 			}
 		}
@@ -287,8 +289,9 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 	d.ResponseList <- resp
 }
 
+//nodes 0-19为id,20-23为ip,24-25为端口
 func (d DHT) decodeNodes(r map[string]interface{}) {
-	fmt.Println("decodeNodes")
+	//fmt.Println("decodeNodes")
 	nodes, ok := r["nodes"].(string)
 	if !ok {
 		return
