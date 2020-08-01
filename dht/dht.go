@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/marksamman/bencode"
+	"golang.org/x/time/rate"
 )
 
 var seed = []string{
@@ -37,9 +38,10 @@ type DHT struct {
 	RequestList  chan *FindNodeReq
 	ResponseList chan *Response
 	DataList     chan map[string]interface{}
+	Limiter      *rate.Limiter
 }
 
-func NewDHT(host string) *DHT {
+func NewDHT(host string, limit int) *DHT {
 	return &DHT{
 		Host:         host,
 		NodeList:     list.New(),
@@ -47,6 +49,7 @@ func NewDHT(host string) *DHT {
 		RequestList:  make(chan *FindNodeReq, 2048),
 		ResponseList: make(chan *Response, 2048),
 		DataList:     make(chan map[string]interface{}, 2048),
+		Limiter:      rate.NewLimiter(rate.Every(time.Second/time.Duration(limit)), limit),
 	}
 }
 
@@ -124,13 +127,18 @@ func (d *DHT) rung(name string, localFunc func()) {
 
 func (d *DHT) sendRequest() {
 	for {
+		if !d.Limiter.Allow() {
+			continue
+		}
 		select {
 		case req := <-d.RequestList:
+
 			udpAddr, err := net.ResolveUDPAddr("udp", req.Addr)
 			if err != nil {
 				fmt.Printf("resoveAddr error : %s\n", err.Error())
 				continue
 			}
+			fmt.Println(len(bencode.Encode(req.Req)))
 			//req := MakeRequest("find_node", d.Id, RandString(20))
 			//fmt.Println("send  find_node to ", udpAddr.String())
 			_, err = d.Conn.WriteToUDP(bencode.Encode(req.Req), udpAddr)
@@ -283,7 +291,6 @@ func (d DHT) decodeNodes(r map[string]interface{}) {
 	//fmt.Println("decodeNodes")
 	nodes, ok := r["nodes"].(string)
 	if !ok {
-		fmt.Println("r not have nodes")
 		return
 	}
 
@@ -297,6 +304,9 @@ func (d DHT) decodeNodes(r map[string]interface{}) {
 		id := nodes[i : i+20]
 		ip := net.IP(nodes[i+20 : i+24]).String()
 		port := binary.BigEndian.Uint16([]byte(nodes[i+24 : i+26]))
+		if port <= 0 || port > 65535 {
+			continue
+		}
 		addr := ip + ":" + strconv.Itoa(int(port))
 		r := MakeRequest("find_node", d.Id, id)
 		req := &FindNodeReq{Addr: addr, Req: r}
