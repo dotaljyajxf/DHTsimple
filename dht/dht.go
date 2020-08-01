@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/marksamman/bencode"
 )
@@ -64,7 +65,20 @@ func (d *DHT) Start() error {
 	d.rung("handleData", d.handleData)
 	d.rung("readResponse", d.readResponse)
 	d.addSend()
+	go d.seedLoop()
 	return nil
+}
+
+func (d *DHT) seedLoop() {
+	timer := time.NewTicker(15 * time.Second)
+	for {
+		select {
+		case <-timer.C:
+			if len(d.RequestList) == 0 {
+				d.addSend()
+			}
+		}
+	}
 }
 
 func (d *DHT) addSend() {
@@ -118,13 +132,10 @@ func (d *DHT) sendRequest() {
 				continue
 			}
 			//req := MakeRequest("find_node", d.Id, RandString(20))
-
+			fmt.Println("send  find_node")
 			_, err = d.Conn.WriteToUDP(bencode.Encode(req.Req), udpAddr)
 			if err != nil {
 				fmt.Printf("send seed err:%s", err.Error())
-			}
-			if len(d.RequestList) == 0 {
-				//d.addSend()
 			}
 		}
 	}
@@ -168,6 +179,7 @@ func (d *DHT) handleData() {
 		select {
 		case data := <-d.DataList:
 			{
+				fmt.Println("read  data")
 				y, ok := data["y"].(string)
 				if !ok {
 					fmt.Printf("msg y is not string\n")
@@ -211,6 +223,7 @@ func (d *DHT) handleData() {
 }
 
 func (d *DHT) doPing(addr *net.UDPAddr, t string) {
+	fmt.Println("doPing")
 	resp := new(Response)
 	resp.R = map[string]interface{}{"id": d.Id}
 	resp.T = t
@@ -220,6 +233,7 @@ func (d *DHT) doPing(addr *net.UDPAddr, t string) {
 }
 
 func (d *DHT) doFindNode(addr *net.UDPAddr, t string) {
+	fmt.Println("doFindNode")
 	r := make(map[string]interface{})
 	r["nodes"] = ""
 	r["id"] = d.Id
@@ -228,6 +242,7 @@ func (d *DHT) doFindNode(addr *net.UDPAddr, t string) {
 }
 
 func (d *DHT) doGetPeer(id string, addr *net.UDPAddr, t string) {
+	fmt.Println("doGetPeer")
 	r := make(map[string]interface{})
 	r["nodes"] = ""
 	r["token"] = MakeToken(addr.String())
@@ -238,6 +253,7 @@ func (d *DHT) doGetPeer(id string, addr *net.UDPAddr, t string) {
 }
 
 func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interface{}) {
+	fmt.Println("doAnnouncePeer")
 	token, ok := arg["token"].(string)
 	if !ok {
 		fmt.Println("doAnnouncePeer no token")
@@ -265,6 +281,7 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 }
 
 func (d DHT) decodeNodes(r map[string]interface{}) {
+	fmt.Println("decodeNodes")
 	nodes, ok := r["nodes"].(string)
 	if !ok {
 		fmt.Println("r not have nodes")
