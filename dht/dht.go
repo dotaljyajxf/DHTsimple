@@ -164,9 +164,10 @@ func (d *DHT) sendResponse() {
 }
 
 func (d *DHT) readResponse() {
-	readBuf := NewBufferByte()
+	readBuf := make([]byte, 2048)
 	for {
 		//fmt.Println("Begin_Read")
+		//readBuf := NewBufferByte()
 		n, addr, err := d.Conn.ReadFromUDP(readBuf)
 		if err != nil {
 			fmt.Printf("read err:%s", err.Error())
@@ -228,8 +229,8 @@ func (d *DHT) handleData() {
 					}
 					d.decodeNodes(r)
 				} else if y == "e" {
-					e, _ := data["e"]
-					fmt.Printf("msg get a err :%v\n", e)
+					//e, _ := data["e"]
+					//fmt.Printf("msg get a err :%v\n", e)
 				} else {
 					fmt.Printf("Unknow msg :%v\n", data)
 				}
@@ -261,12 +262,6 @@ func (d *DHT) doFindNode(addr *net.UDPAddr, t string) {
 func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string) {
 	fmt.Println("doGetPeer")
 
-	id, ok := arg["id"].(string)
-	if !ok {
-		fmt.Println("doGetPeer no id")
-		return
-	}
-
 	infoHash, ok := arg["info_hash"].(string)
 	if !ok {
 		fmt.Println("doGetPeer no info_hash")
@@ -278,7 +273,7 @@ func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string)
 	r := make(map[string]interface{})
 	r["nodes"] = ""
 	r["token"] = MakeToken(addr.String())
-	r["id"] = neighborId(id, d.Id)
+	r["id"] = neighborId(infoHash, d.Id)
 	resp := &Response{Addr: addr, T: t, R: r}
 
 	d.ResponseList <- resp
