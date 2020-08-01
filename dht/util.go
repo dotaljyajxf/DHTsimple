@@ -51,8 +51,8 @@ func ValidateToken(token string, ip string) bool {
 }
 
 func neighborId(nodeId string, target string) string {
-	head := target[0:10]
-	tail := nodeId[10:]
+	head := target[0:15]
+	tail := nodeId[15:]
 	return head + tail
 }
 

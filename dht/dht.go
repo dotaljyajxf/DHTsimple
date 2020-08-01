@@ -201,7 +201,11 @@ func (d *DHT) handleData() {
 				remoteAddr, _ := data["remote_addr"].(*net.UDPAddr)
 
 				if y == "q" {
-					q := data["y"].(string)
+					q, ok := data["q"].(string)
+					if !ok {
+						fmt.Printf("msg q is not string\n")
+						continue
+					}
 					switch q {
 					case "ping":
 						d.doPing(remoteAddr, t)
@@ -308,7 +312,7 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 }
 
 //nodes 0-19为id,20-23为ip,24-25为端口
-func (d DHT) decodeNodes(r map[string]interface{}) {
+func (d *DHT) decodeNodes(r map[string]interface{}) {
 	//fmt.Println("decodeNodes")
 	nodes, ok := r["nodes"].(string)
 	if !ok {
