@@ -2,15 +2,18 @@ package dht
 
 import (
 	"crypto/rand"
+	"crypto/sha1"
 	"fmt"
 	"sync"
 )
 
 type ByteBuf []byte
 
+var secret = "dajidalijinwanchiji"
+
 var BytePool = &sync.Pool{
 	New: func() interface{} {
-		return make(ByteBuf, 256)
+		return make(ByteBuf, 1024)
 	},
 }
 
@@ -36,6 +39,17 @@ func RandString(num int) string {
 	return string(b)
 }
 
+func MakeToken(ip string) string {
+	s := sha1.New()
+	s.Write([]byte(ip))
+	s.Write([]byte(secret))
+	return string(s.Sum(nil))
+}
+
+func ValidateToken(token string, ip string) bool {
+	return token == MakeToken(ip)
+}
+
 func neighborId(nodeId string, target string) string {
 	head := target[0:15]
 	tail := nodeId[15:]
@@ -52,9 +66,9 @@ func MakeRequest(method string, nodeId string, target string) map[string]interfa
 	return ret
 }
 
-func MakeResponse(r map[string]interface{}) map[string]interface{} {
+func MakeResponse(t string, r map[string]interface{}) map[string]interface{} {
 	ret := make(map[string]interface{})
-	ret["t"] = RandString(2)
+	ret["t"] = t
 	ret["y"] = 'r'
 	ret["r"] = r
 
