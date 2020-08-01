@@ -132,7 +132,7 @@ func (d *DHT) sendRequest() {
 				continue
 			}
 			//req := MakeRequest("find_node", d.Id, RandString(20))
-			fmt.Println("send  find_node")
+			fmt.Println("send  find_node to ", udpAddr.String())
 			_, err = d.Conn.WriteToUDP(bencode.Encode(req.Req), udpAddr)
 			if err != nil {
 				fmt.Printf("send seed err:%s", err.Error())
