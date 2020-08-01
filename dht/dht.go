@@ -177,7 +177,6 @@ func (d *DHT) readResponse() {
 			fmt.Printf("decode buf error:%s\n", err.Error())
 			continue
 		}
-		fmt.Println("READ_MSG ", msg)
 		msg["remote_addr"] = addr
 		d.DataList <- msg
 	}
