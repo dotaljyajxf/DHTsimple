@@ -275,7 +275,7 @@ func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string)
 		return
 	}
 
-	GetHash(infoHash, addr.String(), id)
+	InsertHash(infoHash, addr.String(), id)
 
 	r := make(map[string]interface{})
 	r["nodes"] = ""
@@ -309,7 +309,7 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 		return
 	}
 
-	GetHash(infoHash, addr.String(), id)
+	InsertHash(infoHash, addr.String(), id)
 
 	r := make(map[string]interface{})
 	r["id"] = d.Id
