@@ -151,6 +151,7 @@ func (m *Meta) Connect() error {
 	m.conn, err = net.DialTimeout("tcp", m.addr, m.timeout)
 	if err != nil {
 		fmt.Printf("dail tcp err:%s\n", err.Error())
+		return err
 	}
 	m.SetDeadLine(5)
 	err = m.HandShake()

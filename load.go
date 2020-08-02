@@ -17,7 +17,8 @@ func main() {
 	for {
 		s, err := dht.GetHash(date, beginId, 100)
 		if err != nil {
-			continue
+			fmt.Println("err : ", err.Error())
+			break
 		}
 
 		for _, info := range s {

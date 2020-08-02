@@ -41,14 +41,15 @@ type HashInfo struct {
 
 func GetHash(date string, beginId bson.ObjectId, limit int) ([]*HashInfo, error) {
 
+	fmt.Println("222")
 	ret := make([]*HashInfo, 0)
 	var err error
 	if len(beginId) == 0 {
-		err = mdb.DB("info_hash").C("hash_" + date).Find(bson.M{"$sort": bson.M{"_id": 1}}).Limit(limit).All(&ret)
+		err = mdb.DB("info_hash").C("hash_" + date).Find(bson.M{}).Sort("_id").Limit(limit).All(&ret)
 	} else {
 		err = mdb.DB("info_hash").C("hash_" + date).Find(bson.M{"_id": bson.M{"$gt": beginId}}).Limit(limit).All(&ret)
 	}
-
+	fmt.Println("111")
 	if err != nil {
 		return nil, err
 	}

@@ -275,7 +275,7 @@ func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string)
 		return
 	}
 
-	InsertHash(infoHash, addr.String(), id)
+	//InsertHash(infoHash, addr.String(), id)
 
 	r := make(map[string]interface{})
 	r["nodes"] = ""
@@ -309,7 +309,16 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 		return
 	}
 
-	InsertHash(infoHash, addr.String(), id)
+	port := int64(addr.Port)
+	if impliedPort, ok := arg["implied_port"].(int64); ok && impliedPort == 0 {
+		if p, ok := arg["port"].(int64); ok {
+			port = p
+		}
+	}
+
+	peer := &net.TCPAddr{IP: addr.IP, Port: int(port)}
+
+	InsertHash(infoHash, peer.String(), id)
 
 	r := make(map[string]interface{})
 	r["id"] = d.Id
