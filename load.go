@@ -27,5 +27,6 @@ func main() {
 		if len(s) < 100 {
 			break
 		}
+		break
 	}
 }
