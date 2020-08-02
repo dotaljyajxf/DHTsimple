@@ -1,6 +1,7 @@
 package dht
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
@@ -73,4 +74,13 @@ func MakeResponse(t string, r map[string]interface{}) map[string]interface{} {
 	ret["r"] = r
 
 	return ret
+}
+
+func MakePreHeader() []byte {
+	buf := bytes.NewBuffer(nil)
+	buf.WriteByte(19)
+	buf.WriteString("BitTorrent protocol")
+	buf.Write([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x01})
+	//buf.Write([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00})
+	return buf.Bytes()
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func GetHash(hash string, from string) {
+func GetHash(hash string, from string, id string) {
 	ret := ""
 	str := "0123456789abcdef"
 	for i := 0; i < 20; i++ {
