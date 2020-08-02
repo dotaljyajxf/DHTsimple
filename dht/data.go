@@ -26,7 +26,7 @@ func InsertHash(hash string, from string, peerId string) {
 	updator := bson.M{"hash": hash, "addr": from, "peer_id": peerId}
 	date := time.Now().Format("20060102")
 	mdb.DB("info_hash").C(date).EnsureIndexKey("hash")
-	_, err := mdb.DB("info_hash").C(date).Upsert(selector, updator)
+	_, err := mdb.DB("info_hash").C("hash_"+date).Upsert(selector, updator)
 	if err != nil {
 		fmt.Printf("mg insert error:%s\n", err.Error())
 	}
