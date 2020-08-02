@@ -2,6 +2,7 @@ package main
 
 import (
 	"dhtTest/dht"
+	"fmt"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
@@ -20,6 +21,7 @@ func main() {
 		}
 
 		for _, info := range s {
+			fmt.Println("do addr: ", info.Addr)
 			d := dht.NewMeta(info.PeerId, info.Addr, []byte(info.Hash))
 			d.Start()
 		}

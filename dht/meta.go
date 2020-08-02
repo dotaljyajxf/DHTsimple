@@ -91,7 +91,7 @@ func (m *Meta) Begin() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-
+		fmt.Println("read data:", data)
 		if data[0] != extended {
 			continue
 		}
@@ -125,12 +125,13 @@ func (m *Meta) Start() {
 		fmt.Printf("connect err:%s\n", err.Error())
 		return
 	}
-
+	fmt.Println("connect finish")
 	ret, err := m.Begin()
 	if err != nil {
 		fmt.Printf("read  err:%s\n", err.Error())
 		return
 	}
+	fmt.Println("begin finish")
 	dict, err := bencode.Decode(bytes.NewBuffer(ret))
 	if err != nil {
 		fmt.Printf("dec ret ode  err:%s\n", err.Error())
