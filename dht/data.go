@@ -31,3 +31,19 @@ func InsertHash(hash string, from string, peerId string) {
 		fmt.Printf("mg insert error:%s\n", err.Error())
 	}
 }
+
+type HashInfo struct {
+	Id     bson.ObjectId `bson:"_id"`
+	Hash   string        `bson:"hash"`
+	Addr   string        `bson:"addr"`
+	PeerId string        `bson:"peer_id"`
+}
+
+func GetHash(date string, beginId bson.ObjectId, limit int) ([]*HashInfo, error) {
+	ret := make([]*HashInfo, 0)
+	err := mdb.DB("info_hash").C("hash_" + date).Find(bson.M{"_id": bson.M{"$gt": beginId}}).Limit(limit).All(&ret)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
+}
