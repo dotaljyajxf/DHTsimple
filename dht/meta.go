@@ -40,7 +40,7 @@ func NewMeta(peerId, addr string, hash []byte) *Meta {
 		addr:        addr,
 		infoHash:    hash,
 		infoHashHex: hex.EncodeToString(hash),
-		timeout:     3 * time.Second,
+		timeout:     10 * time.Second,
 		peerId:      peerId,
 		preHeader:   MakePreHeader(),
 	}
@@ -120,11 +120,11 @@ func (m *Meta) Begin() ([]byte, error) {
 
 func (m *Meta) Start() {
 	err := m.Connect()
-	defer m.conn.Close()
 	if err != nil {
 		fmt.Printf("connect err:%s\n", err.Error())
 		return
 	}
+	defer m.conn.Close()
 	fmt.Println("connect finish")
 	ret, err := m.Begin()
 	if err != nil {
@@ -150,7 +150,6 @@ func (m *Meta) Connect() error {
 	var err error
 	m.conn, err = net.DialTimeout("tcp", m.addr, m.timeout)
 	if err != nil {
-		fmt.Printf("dail tcp err:%s\n", err.Error())
 		return err
 	}
 	m.SetDeadLine(5)
