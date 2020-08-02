@@ -1,20 +1,32 @@
 package dht
 
 import (
-	"encoding/hex"
 	"fmt"
+	"time"
+
+	"gopkg.in/mgo.v2/bson"
+
+	"gopkg.in/mgo.v2"
 )
 
-func GetHash(hash string, from string, id string) {
-	ret := ""
-	str := "0123456789abcdef"
-	for i := 0; i < 20; i++ {
-		tmp := hash[i]
-		ret += string(str[tmp>>4])
-		ret += string(str[tmp&0xf])
-	}
-	ret += "\\0"
+var mdb *mgo.Session
 
-	fmt.Println(from, " ", ret)
-	fmt.Println(from, "_HEX ", hex.EncodeToString([]byte(hash)))
+func init() {
+	var err error
+	mdb, err = mgo.DialWithTimeout("62.234.136.238:27017", 3*time.Second)
+	if err != nil {
+		fmt.Printf("dail mgo err : %s\n", err.Error())
+		return
+	}
+
+}
+
+func GetHash(hash string, from string, peerId string) {
+	selector := bson.M{"hash": hash}
+	updator := bson.M{"hash": hash, "addr": from, "peer_id": peerId}
+	date := time.Now().Format("20060102")
+	_, err := mdb.DB("info_hash").C(date).Upsert(selector, updator)
+	if err != nil {
+		fmt.Printf("mg insert error:%s\n", err.Error())
+	}
 }
