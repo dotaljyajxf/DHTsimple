@@ -263,11 +263,11 @@ func (d *DHT) doFindNode(addr *net.UDPAddr, t string) {
 
 func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string) {
 
-	id, ok := arg["id"].(string)
-	if !ok {
-		fmt.Println("doGetPeer no id")
-		return
-	}
+	//id, ok := arg["id"].(string)
+	//if !ok {
+	//	fmt.Println("doGetPeer no id")
+	//	return
+	//}
 
 	infoHash, ok := arg["info_hash"].(string)
 	if !ok {
