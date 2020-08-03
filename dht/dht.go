@@ -303,6 +303,7 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 	//	return
 	//}
 	fmt.Println("arg:  ", arg)
+	fmt.Println("oldAddr:  ", addr.String())
 	infoHash, ok := arg["info_hash"].(string)
 	if !ok {
 		fmt.Println("doAnnouncePeer no info_hash")
