@@ -41,13 +41,15 @@ func main() {
 		fmt.Printf("dail mgo err : %s\n", err.Error())
 		return
 	}
-	Insert(mdb)
-	return
 
 	v := VisitedDevice{Uid: 100, ProjectId: 121212121, DeviceID: "232323232"}
 	v.Date = time.Now().Format("20060102")
 	v.ID = bson.NewObjectId()
 	v.CreateAt = time.Now().Local()
+
+	fmt.Println(len(v.ID))
+	fmt.Println(len(v.Date))
+	fmt.Println(len(v.CreateAt.String()))
 
 	selector := bson.M{"date": v.Date, "uid": v.Uid, "project_id": v.ProjectId, "device_id": v.DeviceID}
 	_, err = mdb.DB(MONGODB_NAME).C(MONGODB_COLLECTION).Upsert(selector, v)
