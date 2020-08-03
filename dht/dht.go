@@ -297,12 +297,12 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 	//	fmt.Println("doAnnouncePeer token un match")
 	//	return
 	//}
-	id, ok := arg["id"].(string)
-	if !ok {
-		fmt.Println("doGetPeer no id")
-		return
-	}
-
+	//id, ok := arg["id"].(string)
+	//if !ok {
+	//	fmt.Println("doGetPeer no id")
+	//	return
+	//}
+	fmt.Println("arg:  ", arg)
 	infoHash, ok := arg["info_hash"].(string)
 	if !ok {
 		fmt.Println("doAnnouncePeer no info_hash")
@@ -318,7 +318,7 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 
 	peer := &net.TCPAddr{IP: addr.IP, Port: int(port)}
 
-	InsertHash(infoHash, peer.String(), id)
+	InsertHash(infoHash, peer.String())
 
 	r := make(map[string]interface{})
 	r["id"] = d.Id

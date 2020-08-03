@@ -35,13 +35,13 @@ type Meta struct {
 	pieces       [][]byte
 }
 
-func NewMeta(peerId, addr string, hash []byte) *Meta {
+func NewMeta(addr string, hash []byte) *Meta {
 	return &Meta{
 		addr:        addr,
 		infoHash:    hash,
 		infoHashHex: hex.EncodeToString(hash),
 		timeout:     10 * time.Second,
-		peerId:      peerId,
+		peerId:      RandString(20),
 		preHeader:   MakePreHeader(),
 	}
 }
@@ -152,7 +152,7 @@ func (m *Meta) Connect() error {
 	if err != nil {
 		return err
 	}
-	m.SetDeadLine(5)
+	m.SetDeadLine(200)
 	err = m.HandShake()
 	if err != nil {
 		return err
@@ -211,7 +211,7 @@ func (m *Meta) extHandShake() error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Println(data)
 	if data[0] != extended {
 		return errors.New("data 0 err")
 	}

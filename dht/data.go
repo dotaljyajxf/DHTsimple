@@ -21,9 +21,9 @@ func init() {
 
 }
 
-func InsertHash(hash string, from string, peerId string) {
+func InsertHash(hash string, from string) {
 	selector := bson.M{"hash": hash}
-	updator := bson.M{"hash": hash, "addr": from, "peer_id": peerId}
+	updator := bson.M{"hash": hash, "addr": from}
 	date := time.Now().Format("20060102")
 	mdb.DB("info_hash").C(date).EnsureIndexKey("hash")
 	_, err := mdb.DB("info_hash").C("hash_"+date).Upsert(selector, updator)
@@ -33,10 +33,9 @@ func InsertHash(hash string, from string, peerId string) {
 }
 
 type HashInfo struct {
-	Id     bson.ObjectId `bson:"_id"`
-	Hash   string        `bson:"hash"`
-	Addr   string        `bson:"addr"`
-	PeerId string        `bson:"peer_id"`
+	Id   bson.ObjectId `bson:"_id"`
+	Hash string        `bson:"hash"`
+	Addr string        `bson:"addr"`
 }
 
 func GetHash(date string, beginId bson.ObjectId, limit int) ([]*HashInfo, error) {

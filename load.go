@@ -23,7 +23,7 @@ func main() {
 
 		for _, info := range s {
 			fmt.Println("do addr: ", info.Addr)
-			d := dht.NewMeta(info.PeerId, info.Addr, []byte(info.Hash))
+			d := dht.NewMeta(info.Addr, []byte(info.Hash))
 			d.Start()
 		}
 		beginId = s[len(s)-1].Id
