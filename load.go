@@ -21,6 +21,10 @@ func main() {
 			break
 		}
 
+		if len(s) == 0 {
+			break
+		}
+
 		for _, info := range s {
 			fmt.Println("do addr: ", info.Addr)
 			d := dht.NewMeta(info.Addr, []byte(info.Hash))

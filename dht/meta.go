@@ -40,7 +40,7 @@ func NewMeta(addr string, hash []byte) *Meta {
 		addr:        addr,
 		infoHash:    hash,
 		infoHashHex: hex.EncodeToString(hash),
-		timeout:     10 * time.Second,
+		timeout:     100 * time.Second,
 		peerId:      RandString(20),
 		preHeader:   MakePreHeader(),
 	}
