@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
@@ -21,12 +22,28 @@ type VisitedDevice struct {
 	CreateAt  time.Time     `bson:"create_at"`
 }
 
+func Insert(mdb *mgo.Session) {
+	uidBeign := 100
+	pidBeign := 200
+	deviceBegin := "dev_"
+	for i := 0; i < 1000000; i++ {
+		v := VisitedDevice{Uid: int64(uidBeign + i), ProjectId: int64(pidBeign + i), DeviceID: deviceBegin + strconv.Itoa(i)}
+		v.Date = time.Now().Format("20060102")
+		v.ID = bson.NewObjectId()
+		v.CreateAt = time.Now().Local()
+		mdb.DB(MONGODB_NAME).C(MONGODB_COLLECTION).Insert(v)
+	}
+}
+
 func main() {
 	mdb, err := mgo.DialWithTimeout("62.234.136.238:27017", 3*time.Second)
 	if err != nil {
 		fmt.Printf("dail mgo err : %s\n", err.Error())
 		return
 	}
+	Insert(mdb)
+	return
+
 	v := VisitedDevice{Uid: 100, ProjectId: 121212121, DeviceID: "232323232"}
 	v.Date = time.Now().Format("20060102")
 	v.ID = bson.NewObjectId()
