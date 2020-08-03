@@ -302,20 +302,23 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 	//	fmt.Println("doGetPeer no id")
 	//	return
 	//}
-	fmt.Println("arg:  ", arg)
-	fmt.Println("oldAddr:  ", addr.String())
 	infoHash, ok := arg["info_hash"].(string)
 	if !ok {
 		fmt.Println("doAnnouncePeer no info_hash")
 		return
 	}
 
-	port := int64(addr.Port)
-	if impliedPort, ok := arg["implied_port"].(int64); ok && impliedPort == 0 {
-		if p, ok := arg["port"].(int64); ok {
-			port = p
-		}
+	port, ok := arg["port"].(int64)
+	if !ok {
+		port = int64(addr.Port)
 	}
+
+	//port := int64(addr.Port)
+	//if impliedPort, ok := arg["implied_port"].(int64); ok && impliedPort == 0 {
+	//	if p, ok := arg["port"].(int64); ok {
+	//		port = p
+	//	}
+	//}
 
 	peer := &net.TCPAddr{IP: addr.IP, Port: int(port)}
 
