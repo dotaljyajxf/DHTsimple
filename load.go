@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dhtTest/dht"
+	"DHTsimple/dht"
 	"fmt"
 	"time"
 

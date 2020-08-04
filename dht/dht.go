@@ -317,7 +317,8 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 
 	peer := &net.TCPAddr{IP: addr.IP, Port: int(port)}
 
-	InsertHash(infoHash, peer.String())
+	h := HashPair{[]byte(infoHash), peer.String()}
+	hashChan <- h
 
 	r := make(map[string]interface{})
 	r["id"] = d.Id
