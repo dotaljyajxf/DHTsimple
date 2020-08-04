@@ -40,7 +40,7 @@ func NewMeta(addr string, hash []byte) *Meta {
 		addr:        addr,
 		infoHash:    hash,
 		infoHashHex: hex.EncodeToString(hash),
-		timeout:     100 * time.Second,
+		timeout:     10 * time.Second,
 		peerId:      RandString(20),
 		preHeader:   MakePreHeader(),
 	}
@@ -79,24 +79,34 @@ func (m *Meta) readOnePiece(payload []byte) error {
 	return nil
 }
 
-func (m *Meta) Begin() ([]byte, error) {
-	m.SetDeadLine(30)
-
+func (m *Meta) sendRequestPiece() {
 	for i := 0; i < int(m.pieceCount); i++ {
 		m.requestPiece(i)
 	}
+}
+
+func (m *Meta) Begin() ([]byte, error) {
+	m.SetDeadLine(300 * 2)
 
 	for {
 		data, err := m.ReadN()
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println("read data:", data)
+
+		if len(data) < 2 {
+			continue
+		}
+
 		if data[0] != extended {
 			continue
 		}
 
-		if data[1] != 1 {
+		if data[1] == 0 {
+			err := m.onExtHandshake(data[2:])
+			if err != nil {
+				fmt.Println("ext Hand err: ", err.Error())
+			}
 			continue
 		}
 		err = m.readOnePiece(data[2:])
@@ -131,13 +141,10 @@ func (m *Meta) Start() {
 		fmt.Printf("read  err:%s\n", err.Error())
 		return
 	}
-	fmt.Println("begin finish")
-	dict, err := bencode.Decode(bytes.NewBuffer(ret))
+	err = CreateTorrent(ret, m.infoHashHex)
 	if err != nil {
-		fmt.Printf("dec ret ode  err:%s\n", err.Error())
-		return
+		fmt.Printf("create torrent   err:%s\n", err.Error())
 	}
-	fmt.Printf("%v\n", dict)
 }
 
 func (m *Meta) SetDeadLine(second time.Duration) {
@@ -152,7 +159,7 @@ func (m *Meta) Connect() error {
 	if err != nil {
 		return err
 	}
-	m.SetDeadLine(200)
+	m.SetDeadLine(300)
 	err = m.HandShake()
 	if err != nil {
 		return err
@@ -164,17 +171,14 @@ func (m *Meta) WriteTo(data []byte) error {
 
 	length := uint32(len(data))
 
-	lenByte := make([]byte, 4)
-	binary.BigEndian.PutUint32(lenByte, length)
+	buf := bytes.NewBuffer(nil)
+	binary.Write(buf, binary.BigEndian, length)
 
-	//buf := bytes.NewBuffer(nil)
-	//binary.Write(buf, binary.BigEndian, length)
-	//buf.Write(data)
-	_, err := m.conn.Write(append(lenByte, data...))
+	sendMsg := append(buf.Bytes(), data...)
+	_, err := m.conn.Write(sendMsg)
 	if err != nil {
 		return fmt.Errorf("write message failed: %v", err)
 	}
-
 	return nil
 }
 
@@ -203,22 +207,8 @@ func (m *Meta) extHandShake() error {
 			"ut_metadata": 1,
 		},
 	})...)
-	if err := m.WriteTo(bencode.Encode(data)); err != nil {
-		return err
-	}
 
-	data, err := m.ReadN()
-	if err != nil {
-		return err
-	}
-	fmt.Println(data)
-	if data[0] != extended {
-		return errors.New("data 0 err")
-	}
-	if data[1] != 0 {
-		return errors.New("data 1 err")
-	}
-	return m.onExtHandshake(data[2:])
+	return m.WriteTo(data)
 }
 
 func (m *Meta) HandShake() error {
@@ -280,7 +270,6 @@ func (this *Meta) onExtHandshake(payload []byte) error {
 	if !ok {
 		return errors.New("negative metadata ut_metadata")
 	}
-
 	this.metadataSize = metadataSize
 	this.utMetadata = utMetadata
 	this.pieceCount = metadataSize / perBlock
@@ -288,17 +277,22 @@ func (this *Meta) onExtHandshake(payload []byte) error {
 		this.pieceCount++
 	}
 	this.pieces = make([][]byte, this.pieceCount)
-
+	this.sendRequestPiece()
 	return nil
 }
 
 func (mw *Meta) requestPiece(i int) {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteByte(byte(extended))
+	buf.WriteByte(extended)
 	buf.WriteByte(byte(mw.utMetadata))
+	//buf.WriteByte(2)
 	buf.Write(bencode.Encode(map[string]interface{}{
 		"msg_type": 0,
 		"piece":    i,
 	}))
-	mw.WriteTo(buf.Bytes())
+	//fmt.Println(buf.String())
+	err := mw.WriteTo(buf.Bytes())
+	if err != nil {
+		fmt.Println("write err :", err.Error())
+	}
 }
