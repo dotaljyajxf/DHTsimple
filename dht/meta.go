@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -24,7 +23,6 @@ const (
 type Meta struct {
 	addr         string
 	infoHash     []byte
-	infoHashHex  string
 	timeout      time.Duration
 	conn         net.Conn
 	peerId       string
@@ -37,12 +35,11 @@ type Meta struct {
 
 func NewMeta(addr string, hash []byte) *Meta {
 	return &Meta{
-		addr:        addr,
-		infoHash:    hash,
-		infoHashHex: hex.EncodeToString(hash),
-		timeout:     10 * time.Second,
-		peerId:      RandString(20),
-		preHeader:   MakePreHeader(),
+		addr:      addr,
+		infoHash:  hash,
+		timeout:   20 * time.Second,
+		peerId:    RandString(20),
+		preHeader: MakePreHeader(),
 	}
 }
 
