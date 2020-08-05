@@ -308,11 +308,15 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 		return
 	}
 
-	port := int64(addr.Port)
-	if impliedPort, ok := arg["implied_port"].(int64); ok && impliedPort == 0 {
-		if p, ok := arg["port"].(int64); ok {
-			port = p
-		}
+	p, ok := arg["port"].(int64)
+	if !ok {
+		fmt.Println("doAnnouncePeer port error")
+		return
+	}
+	port := p
+
+	if impliedPort, ok := arg["implied_port"].(int64); ok && impliedPort != 0 {
+		port = int64(addr.Port)
 	}
 
 	peer := &net.TCPAddr{IP: addr.IP, Port: int(port)}
