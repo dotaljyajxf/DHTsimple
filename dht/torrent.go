@@ -10,15 +10,15 @@ import (
 )
 
 type tfile struct {
-	name   string
-	length int64
+	name   string `bson:"file_name"`
+	length int64  `bson:"file_len"`
 }
 
 type Torrent struct {
-	infohashHex string
-	name        string
-	length      int64
-	files       []*tfile
+	infohashHex string   `bson:"hash"`
+	name        string   `bson:"name"`
+	length      int64    `bson:"len"`
+	files       []*tfile `bson:"files"`
 }
 
 type HashPair struct {
@@ -45,12 +45,13 @@ func work() {
 			if err != nil {
 				continue
 			}
-			fmt.Println("--------------------------------------------------------------------")
-			fmt.Printf("name:%s,HASH:%s,length:%d\n", t.name, t.infohashHex, t.length)
-			for _, nfile := range t.files {
-				fmt.Printf("\t%s length:%d\n", nfile.name, nfile.length)
-			}
-			fmt.Println("--------------------------------------------------------------------")
+			InsertHash(t)
+			//fmt.Println("--------------------------------------------------------------------")
+			//fmt.Printf("name:%s,HASH:%s,length:%d\n", t.name, t.infohashHex, t.length)
+			//for _, nfile := range t.files {
+			//	fmt.Printf("\t%s length:%d\n", nfile.name, nfile.length)
+			//}
+			//fmt.Println("--------------------------------------------------------------------")
 		}
 	}
 }
