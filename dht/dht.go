@@ -310,8 +310,7 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 
 	p, ok := arg["port"].(int64)
 	if !ok {
-		fmt.Println("doAnnouncePeer port error")
-		return
+		p = int64(addr.Port)
 	}
 	port := p
 

@@ -32,7 +32,7 @@ func init() {
 }
 
 func InsertHash(t *Torrent) {
-	selector := bson.M{"hash": t.infohashHex}
+	selector := bson.M{"hash": t.InfohashHex}
 	_, err := mdb.DB(DB_NAME).C(DB_COLLECTION).Upsert(selector, t)
 	if err != nil {
 		fmt.Printf("mg insert error:%s\n", err.Error())

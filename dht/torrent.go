@@ -10,15 +10,15 @@ import (
 )
 
 type tfile struct {
-	name   string `bson:"file_name"`
-	length int64  `bson:"file_len"`
+	Name   string `bson:"file_name"`
+	Length int64  `bson:"file_len"`
 }
 
 type Torrent struct {
-	infohashHex string   `bson:"hash"`
-	name        string   `bson:"name"`
-	length      int64    `bson:"len"`
-	files       []*tfile `bson:"files"`
+	InfohashHex string   `bson:"hash"`
+	Name        string   `bson:"name"`
+	Length      int64    `bson:"len"`
+	Files       []*tfile `bson:"files"`
 }
 
 type HashPair struct {
@@ -68,14 +68,14 @@ func parseTorrent(meta []byte, infohashHex string) (*Torrent, error) {
 		return nil, err
 	}
 
-	t := &Torrent{infohashHex: infohashHex}
+	t := &Torrent{InfohashHex: infohashHex}
 	if name, ok := dict["name.utf-8"].(string); ok {
-		t.name = name
+		t.Name = name
 	} else if name, ok := dict["name"].(string); ok {
-		t.name = name
+		t.Name = name
 	}
 	if length, ok := dict["length"].(int64); ok {
-		t.length = length
+		t.Length = length
 	}
 
 	var totalSize int64
@@ -99,7 +99,7 @@ func parseTorrent(meta []byte, infohashHex string) (*Torrent, error) {
 			filelength = length
 			totalSize += filelength
 		}
-		t.files = append(t.files, &tfile{name: filename, length: filelength})
+		t.Files = append(t.Files, &tfile{Name: filename, Length: filelength})
 	}
 
 	if files, ok := dict["files"].([]interface{}); ok {
@@ -110,11 +110,11 @@ func parseTorrent(meta []byte, infohashHex string) (*Torrent, error) {
 		}
 	}
 
-	if t.length == 0 {
-		t.length = totalSize
+	if t.Length == 0 {
+		t.Length = totalSize
 	}
-	if len(t.files) == 0 {
-		t.files = append(t.files, &tfile{name: t.name, length: t.length})
+	if len(t.Files) == 0 {
+		t.Files = append(t.Files, &tfile{Name: t.Name, Length: t.Length})
 	}
 
 	return t, nil
