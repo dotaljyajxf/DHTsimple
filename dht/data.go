@@ -23,10 +23,10 @@ func init() {
 		return
 	}
 	hashIndex := mgo.Index{
-		Name:        "h_index",
-		Unique:      true,
-		Background:  true,
-		ExpireAfter: 24 * time.Hour * 30,
+		Key:        []string{"hash"},
+		Name:       "h_index",
+		Unique:     true,
+		Background: true,
 	}
 	mdb.DB(DB_NAME).C(DB_COLLECTION).EnsureIndex(hashIndex)
 }
