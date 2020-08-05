@@ -40,7 +40,7 @@ func NewMeta(addr string, hash []byte) *Meta {
 		addr:        addr,
 		infoHash:    hash,
 		infoHashHex: hex.EncodeToString(hash),
-		timeout:     10 * time.Second,
+		timeout:     15 * time.Second,
 		peerId:      RandString(20),
 		preHeader:   MakePreHeader(),
 	}
@@ -86,7 +86,7 @@ func (m *Meta) sendRequestPiece() {
 }
 
 func (m *Meta) Begin() ([]byte, error) {
-	m.SetDeadLine(300 * 2)
+	m.SetDeadLine(30)
 
 	for {
 		data, err := m.ReadN()
@@ -159,7 +159,7 @@ func (m *Meta) Connect() error {
 	if err != nil {
 		return err
 	}
-	m.SetDeadLine(300)
+	m.SetDeadLine(15)
 	err = m.HandShake()
 	if err != nil {
 		return err
