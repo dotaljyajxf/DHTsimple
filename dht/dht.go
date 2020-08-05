@@ -164,7 +164,7 @@ func (d *DHT) sendResponse() {
 }
 
 func (d *DHT) readResponse() {
-	readBuf := make([]byte, 2048)
+	readBuf := make([]byte, 8192)
 	for {
 		//fmt.Println("Begin_Read")
 		//readBuf := NewBufferByte()
