@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -24,7 +23,6 @@ const (
 type Meta struct {
 	addr         string
 	infoHash     []byte
-	infoHashHex  string
 	timeout      time.Duration
 	conn         net.Conn
 	peerId       string
@@ -37,12 +35,11 @@ type Meta struct {
 
 func NewMeta(addr string, hash []byte) *Meta {
 	return &Meta{
-		addr:        addr,
-		infoHash:    hash,
-		infoHashHex: hex.EncodeToString(hash),
-		timeout:     15 * time.Second,
-		peerId:      RandString(20),
-		preHeader:   MakePreHeader(),
+		addr:      addr,
+		infoHash:  hash,
+		timeout:   20 * time.Second,
+		peerId:    RandString(20),
+		preHeader: MakePreHeader(),
 	}
 }
 
@@ -128,23 +125,20 @@ func (m *Meta) Begin() ([]byte, error) {
 	}
 }
 
-func (m *Meta) Start() {
+func (m *Meta) Start() []byte {
 	err := m.Connect()
 	if err != nil {
 		fmt.Printf("connect err:%s\n", err.Error())
-		return
+		return nil
 	}
 	defer m.conn.Close()
 	fmt.Println("connect finish")
 	ret, err := m.Begin()
 	if err != nil {
 		fmt.Printf("read  err:%s\n", err.Error())
-		return
+		return nil
 	}
-	err = CreateTorrent(ret, m.infoHashHex)
-	if err != nil {
-		fmt.Printf("create torrent   err:%s\n", err.Error())
-	}
+	return ret
 }
 
 func (m *Meta) SetDeadLine(second time.Duration) {

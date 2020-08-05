@@ -1,4 +1,4 @@
-module dhtTest
+module DHTsimple
 
 go 1.13
 

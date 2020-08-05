@@ -1,7 +1,7 @@
 package main
 
 import (
-	"dhtTest/dht"
+	"DHTsimple/dht"
 	"fmt"
 	"os"
 	"os/signal"
@@ -22,6 +22,8 @@ func main() {
 		fmt.Println(err.Error())
 		return
 	}
+
+	go dht.LoadTorrent(2)
 
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, os.Interrupt, os.Kill, syscall.SIGTERM)

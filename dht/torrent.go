@@ -2,6 +2,7 @@ package dht
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"strings"
 
@@ -20,10 +21,50 @@ type Torrent struct {
 	files       []*tfile
 }
 
-func CreateTorrent(meta []byte, infohashHex string) error {
+type HashPair struct {
+	Hash []byte
+	Addr string
+}
+
+var hashChan chan HashPair
+
+func init() {
+	hashChan = make(chan HashPair, 1024)
+}
+
+func work() {
+	for {
+		select {
+		case info := <-hashChan:
+			d := NewMeta(info.Addr, info.Hash)
+			metaData := d.Start()
+			if metaData == nil {
+				continue
+			}
+			t, err := parseTorrent(metaData, hex.EncodeToString([]byte(info.Hash)))
+			if err != nil {
+				continue
+			}
+			fmt.Println("--------------------------------------------------------------------")
+			fmt.Printf("name:%s,HASH:%s,length:%d\n", t.name, t.infohashHex, t.length)
+			for _, nfile := range t.files {
+				fmt.Printf("\t%s length:%d\n", nfile.name, nfile.length)
+			}
+			fmt.Println("--------------------------------------------------------------------")
+		}
+	}
+}
+
+func LoadTorrent(n int) {
+	for i := 0; i < n; i++ {
+		go work()
+	}
+}
+
+func parseTorrent(meta []byte, infohashHex string) (*Torrent, error) {
 	dict, err := bencode.Decode(bytes.NewBuffer(meta))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	t := &Torrent{infohashHex: infohashHex}
@@ -75,9 +116,5 @@ func CreateTorrent(meta []byte, infohashHex string) error {
 		t.files = append(t.files, &tfile{name: t.name, length: t.length})
 	}
 
-	fmt.Printf("name:%s,HASH:%s,length:%d\n", t.name, t.infohashHex, t.length)
-	for _, nfile := range t.files {
-		fmt.Printf("%s-->%d\n", nfile.name, nfile.length)
-	}
-	return nil
+	return t, nil
 }
