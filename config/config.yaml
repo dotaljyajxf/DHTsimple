@@ -1,12 +1,16 @@
 
+#监听地址
 host: 0.0.0.0:12121
+#每秒发出的数据包限制
 per_second_send_limit: 1000
 
 request_buf_len: 1024
 response_buf_len: 1024
 data_buf_len: 1024
 
+#下载时的连接超时
 connect_timeout: 15
+#握手超时
 hand_timeout: 20
 read_timeout: 30
 write_timeout: 30
