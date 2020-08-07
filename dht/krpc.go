@@ -1,8 +1,9 @@
 package dht
 
 import (
+	"DHTsimple/config"
+	"DHTsimple/load"
 	"bytes"
-	"container/list"
 	"context"
 	"encoding/binary"
 	"fmt"
@@ -33,7 +34,6 @@ type Response struct {
 
 type DHT struct {
 	Host         string
-	NodeList     *list.List
 	Conn         *net.UDPConn
 	Id           string
 	RequestList  chan *FindNodeReq
@@ -42,15 +42,14 @@ type DHT struct {
 	Limiter      *rate.Limiter
 }
 
-func NewDHT(host string, limit int) *DHT {
+func NewDHT() *DHT {
 	return &DHT{
-		Host:         host,
-		NodeList:     list.New(),
+		Host:         config.Conf.Host,
 		Id:           RandString(20),
-		RequestList:  make(chan *FindNodeReq, 2048),
-		ResponseList: make(chan *Response, 2048),
-		DataList:     make(chan map[string]interface{}, 2048),
-		Limiter:      rate.NewLimiter(rate.Every(time.Second/time.Duration(limit)), limit),
+		RequestList:  make(chan *FindNodeReq, config.Conf.RequestBufLen),
+		ResponseList: make(chan *Response, config.Conf.ResponseBufLen),
+		DataList:     make(chan map[string]interface{}, config.Conf.DataBufLen),
+		Limiter:      rate.NewLimiter(rate.Every(time.Second/time.Duration(config.Conf.RequestBufLen)), config.Conf.PerSecondSendLimit),
 	}
 }
 
@@ -68,12 +67,12 @@ func (d *DHT) Start() error {
 	d.rung("sendResponse", d.sendResponse)
 	d.rung("handleData", d.handleData)
 	d.rung("readResponse", d.readResponse)
-	d.addSend()
-	go d.seedLoop()
+	d.rung("seedLoop", d.seedLoop)
 	return nil
 }
 
 func (d *DHT) seedLoop() {
+	d.addSend()
 	timer := time.NewTicker(15 * time.Second)
 	for {
 		select {
@@ -87,29 +86,10 @@ func (d *DHT) seedLoop() {
 
 func (d *DHT) addSend() {
 	for _, addr := range seed {
-		//d.RequestList <- addr
-		//udpAddr, err := net.ResolveUDPAddr("udp", addr)
-		//if err != nil {
-		//	fmt.Printf("resoveSeed error : %s\n", err.Error())
-		//	continue
-		//}
 
-		findNodeReq := new(FindNodeReq)
-		req := make(map[string]interface{})
-		req["t"] = RandString(2)
-		req["y"] = "q"
-		req["q"] = "find_node"
-		req["a"] = map[string]interface{}{"id": d.Id, "target": RandString(20)}
-
-		findNodeReq.Addr = addr
-		findNodeReq.Req = req
-
+		req := MakeRequest("find_node", d.Id, "")
+		findNodeReq := &FindNodeReq{addr, req}
 		d.RequestList <- findNodeReq
-		//_, err = d.Conn.WriteToUDP(bencode.Encode(req), udpAddr)
-		//if err != nil {
-		//	fmt.Printf("send seed err:%s", err.Error())
-		//}
-
 	}
 }
 
@@ -118,6 +98,7 @@ func (d *DHT) rung(name string, localFunc func()) {
 		defer func() {
 			if err := recover(); err != nil {
 				fmt.Printf("name:%s get a error:%s\n", name, err)
+				panic(err)
 			}
 		}()
 		localFunc()
@@ -137,12 +118,10 @@ func (d *DHT) sendRequest() {
 				fmt.Printf("resoveAddr error : %s\n", err.Error())
 				continue
 			}
-			//fmt.Println(len(bencode.Encode(req.Req)))
-			//req := MakeRequest("find_node", d.Id, RandString(20))
-			//fmt.Println("send  find_node to ", udpAddr.String())
+
 			_, err = d.Conn.WriteToUDP(bencode.Encode(req.Req), udpAddr)
 			if err != nil {
-				fmt.Printf("send seed err:%s", err.Error())
+				fmt.Printf("sendRequest err:%s", err.Error())
 			}
 		}
 	}
@@ -157,7 +136,7 @@ func (d *DHT) sendResponse() {
 			r := MakeResponse(resp.T, resp.R)
 			_, err := d.Conn.WriteToUDP(bencode.Encode(r), resp.Addr)
 			if err != nil {
-				fmt.Printf("send seed err:%s", err.Error())
+				fmt.Printf("sendResponse err:%s", err.Error())
 			}
 		}
 	}
@@ -166,8 +145,6 @@ func (d *DHT) sendResponse() {
 func (d *DHT) readResponse() {
 	readBuf := make([]byte, 8192)
 	for {
-		//fmt.Println("Begin_Read")
-		//readBuf := NewBufferByte()
 		n, addr, err := d.Conn.ReadFromUDP(readBuf)
 		if err != nil {
 			fmt.Printf("read err:%s", err.Error())
@@ -217,7 +194,7 @@ func (d *DHT) handleData() {
 							fmt.Printf("get peer no arg\n")
 							break
 						}
-						d.doGetPeer(a, remoteAddr, t)
+						d.doGetPeer(remoteAddr, t, a)
 					case "announce_peer":
 						a, ok := data["a"].(map[string]interface{})
 						if !ok {
@@ -261,13 +238,7 @@ func (d *DHT) doFindNode(addr *net.UDPAddr, t string) {
 	d.ResponseList <- resp
 }
 
-func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string) {
-
-	//id, ok := arg["id"].(string)
-	//if !ok {
-	//	fmt.Println("doGetPeer no id")
-	//	return
-	//}
+func (d *DHT) doGetPeer(addr *net.UDPAddr, t string, arg map[string]interface{}) {
 
 	infoHash, ok := arg["info_hash"].(string)
 	if !ok {
@@ -275,12 +246,10 @@ func (d *DHT) doGetPeer(arg map[string]interface{}, addr *net.UDPAddr, t string)
 		return
 	}
 
-	//InsertHash(infoHash, addr.String(), id)
-
 	r := make(map[string]interface{})
 	r["nodes"] = ""
 	r["token"] = MakeToken(addr.String())
-	r["id"] = neighborId(infoHash, d.Id)
+	r["id"] = NeighborId(d.Id, infoHash)
 	resp := &Response{Addr: addr, T: t, R: r}
 
 	d.ResponseList <- resp
@@ -297,11 +266,7 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 	//	fmt.Println("doAnnouncePeer token un match")
 	//	return
 	//}
-	//id, ok := arg["id"].(string)
-	//if !ok {
-	//	fmt.Println("doGetPeer no id")
-	//	return
-	//}
+
 	infoHash, ok := arg["info_hash"].(string)
 	if !ok {
 		fmt.Println("doAnnouncePeer no info_hash")
@@ -318,21 +283,22 @@ func (d *DHT) doAnnouncePeer(addr *net.UDPAddr, t string, arg map[string]interfa
 		port = int64(addr.Port)
 	}
 
+	if port <= 0 || port >= 65535 {
+		return
+	}
+
 	peer := &net.TCPAddr{IP: addr.IP, Port: int(port)}
+	load.HashChan <- load.HashPair{Hash: []byte(infoHash), Addr: peer.String()}
 
-	h := HashPair{[]byte(infoHash), peer.String()}
-	hashChan <- h
-
-	r := make(map[string]interface{})
-	r["id"] = d.Id
-	resp := &Response{Addr: addr, T: t, R: r}
-
-	d.ResponseList <- resp
+	//r := make(map[string]interface{})
+	//r["id"] = d.Id
+	//resp := &Response{Addr: addr, T: t, R: r}
+	//
+	//d.ResponseList <- resp
 }
 
 //nodes 0-19为id,20-23为ip,24-25为端口
 func (d *DHT) decodeNodes(r map[string]interface{}) {
-	//fmt.Println("decodeNodes")
 	nodes, ok := r["nodes"].(string)
 	if !ok {
 		return
@@ -348,7 +314,7 @@ func (d *DHT) decodeNodes(r map[string]interface{}) {
 		id := nodes[i : i+20]
 		ip := net.IP(nodes[i+20 : i+24]).String()
 		port := binary.BigEndian.Uint16([]byte(nodes[i+24 : i+26]))
-		if port <= 0 || port > 65535 {
+		if port <= 0 || port >= 65535 {
 			continue
 		}
 		addr := ip + ":" + strconv.Itoa(int(port))

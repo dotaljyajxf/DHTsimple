@@ -1,6 +1,7 @@
-package dht
+package load
 
 import (
+	"DHTsimple/config"
 	"bytes"
 	"encoding/hex"
 	"fmt"
@@ -15,10 +16,10 @@ type tfile struct {
 }
 
 type Torrent struct {
-	InfohashHex string   `bson:"hash"`
-	Name        string   `bson:"name"`
-	Length      int64    `bson:"len"`
-	Files       []*tfile `bson:"files"`
+	HashHex string   `bson:"hash"`
+	Name    string   `bson:"name"`
+	Length  int64    `bson:"len"`
+	Files   []*tfile `bson:"files"`
 }
 
 type HashPair struct {
@@ -26,32 +27,26 @@ type HashPair struct {
 	Addr string
 }
 
-var hashChan chan HashPair
+var HashChan chan HashPair
 
 func init() {
-	hashChan = make(chan HashPair, 1024)
+	HashChan = make(chan HashPair, config.Conf.LoadBufLen)
 }
 
 func work() {
 	for {
 		select {
-		case info := <-hashChan:
+		case info := <-HashChan:
 			d := NewMeta(info.Addr, info.Hash)
-			metaData := d.Start()
+			metaData := d.Load()
 			if metaData == nil {
 				continue
 			}
-			t, err := parseTorrent(metaData, hex.EncodeToString([]byte(info.Hash)))
+			t, err := parseTorrent(metaData, hex.EncodeToString(info.Hash))
 			if err != nil {
 				continue
 			}
 			InsertHash(t)
-			//fmt.Println("--------------------------------------------------------------------")
-			//fmt.Printf("name:%s,HASH:%s,length:%d\n", t.name, t.infohashHex, t.length)
-			//for _, nfile := range t.files {
-			//	fmt.Printf("\t%s length:%d\n", nfile.name, nfile.length)
-			//}
-			//fmt.Println("--------------------------------------------------------------------")
 		}
 	}
 }
@@ -62,13 +57,13 @@ func LoadTorrent(n int) {
 	}
 }
 
-func parseTorrent(meta []byte, infohashHex string) (*Torrent, error) {
+func parseTorrent(meta []byte, hashHex string) (*Torrent, error) {
 	dict, err := bencode.Decode(bytes.NewBuffer(meta))
 	if err != nil {
 		return nil, err
 	}
 
-	t := &Torrent{InfohashHex: infohashHex}
+	t := &Torrent{HashHex: hashHex}
 	if name, ok := dict["name.utf-8"].(string); ok {
 		t.Name = name
 	} else if name, ok := dict["name"].(string); ok {

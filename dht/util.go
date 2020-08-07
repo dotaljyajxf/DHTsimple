@@ -5,26 +5,9 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
-	"sync"
 )
 
-type ByteBuf []byte
-
 var secret = "dajidalijinwanchiji"
-
-var BytePool = &sync.Pool{
-	New: func() interface{} {
-		return make(ByteBuf, 1024)
-	},
-}
-
-func NewBufferByte() ByteBuf {
-	return BytePool.Get().(ByteBuf)
-}
-
-func (b ByteBuf) Release() {
-	BytePool.Put(b)
-}
 
 func RandString(num int) string {
 	b := make([]byte, num)
@@ -51,18 +34,20 @@ func ValidateToken(token string, ip string) bool {
 	return token == MakeToken(ip)
 }
 
-func neighborId(nodeId string, target string) string {
-	head := target[0:15]
-	tail := nodeId[15:]
-	return head + tail
+func NeighborId(nodeId string, target string) string {
+	return target[0:15] + nodeId[15:]
 }
 
 func MakeRequest(method string, nodeId string, target string) map[string]interface{} {
+	neighborId := nodeId
+	if len(target) != 0 {
+		neighborId = NeighborId(nodeId, target)
+	}
 	ret := make(map[string]interface{})
 	ret["t"] = RandString(2)
 	ret["y"] = "q"
 	ret["q"] = method
-	ret["a"] = map[string]interface{}{"id": neighborId(nodeId, target), "target": RandString(20)}
+	ret["a"] = map[string]interface{}{"id": neighborId, "target": RandString(20)}
 
 	return ret
 }
@@ -80,7 +65,6 @@ func MakePreHeader() []byte {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteByte(19)
 	buf.WriteString("BitTorrent protocol")
-	//buf.Write([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x01})
 	buf.Write([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00})
 	return buf.Bytes()
 }

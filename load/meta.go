@@ -1,6 +1,8 @@
-package dht
+package load
 
 import (
+	"DHTsimple/config"
+	"DHTsimple/dht"
 	"bytes"
 	"crypto/sha1"
 	"encoding/binary"
@@ -23,7 +25,6 @@ const (
 type Meta struct {
 	addr         string
 	infoHash     []byte
-	timeout      time.Duration
 	conn         net.Conn
 	peerId       string
 	preHeader    []byte
@@ -37,9 +38,8 @@ func NewMeta(addr string, hash []byte) *Meta {
 	return &Meta{
 		addr:      addr,
 		infoHash:  hash,
-		timeout:   20 * time.Second,
-		peerId:    RandString(20),
-		preHeader: MakePreHeader(),
+		peerId:    dht.RandString(20),
+		preHeader: dht.MakePreHeader(),
 	}
 }
 
@@ -83,7 +83,7 @@ func (m *Meta) sendRequestPiece() {
 }
 
 func (m *Meta) Begin() ([]byte, error) {
-	m.SetDeadLine(30)
+	m.SetDeadLine(config.Conf.ReadTimeout, config.Conf.WriteTimeout)
 
 	for {
 		data, err := m.ReadN()
@@ -99,13 +99,10 @@ func (m *Meta) Begin() ([]byte, error) {
 			continue
 		}
 
-		if data[1] == 0 {
-			err := m.onExtHandshake(data[2:])
-			if err != nil {
-				fmt.Println("ext Hand err: ", err.Error())
-			}
+		if data[1] != 1 {
 			continue
 		}
+
 		err = m.readOnePiece(data[2:])
 		if err != nil {
 			return nil, err
@@ -125,35 +122,33 @@ func (m *Meta) Begin() ([]byte, error) {
 	}
 }
 
-func (m *Meta) Start() []byte {
+func (m *Meta) Load() []byte {
 	err := m.Connect()
 	if err != nil {
 		fmt.Printf("connect err:%s\n", err.Error())
 		return nil
 	}
 	defer m.conn.Close()
-	fmt.Println("connect finish")
 	ret, err := m.Begin()
 	if err != nil {
-		fmt.Printf("read  err:%s\n", err.Error())
+		fmt.Printf("load  err:%s\n", err.Error())
 		return nil
 	}
 	return ret
 }
 
-func (m *Meta) SetDeadLine(second time.Duration) {
-	deadLine := time.Now().Add(second * time.Second)
-	m.conn.SetReadDeadline(deadLine)
-	m.conn.SetWriteDeadline(deadLine)
+func (m *Meta) SetDeadLine(readTimeout int, writeTimeout int) {
+	m.conn.SetReadDeadline(time.Now().Add(time.Duration(readTimeout) * time.Second))
+	m.conn.SetWriteDeadline(time.Now().Add(time.Duration(writeTimeout) * time.Second))
 }
 
 func (m *Meta) Connect() error {
 	var err error
-	m.conn, err = net.DialTimeout("tcp", m.addr, m.timeout)
+	m.conn, err = net.DialTimeout("tcp", m.addr, time.Duration(config.Conf.ConnectTimeout)*time.Second)
 	if err != nil {
 		return err
 	}
-	m.SetDeadLine(15)
+	m.SetDeadLine(config.Conf.HandTimeout, config.Conf.HandTimeout)
 	err = m.HandShake()
 	if err != nil {
 		return err
@@ -202,7 +197,22 @@ func (m *Meta) extHandShake() error {
 		},
 	})...)
 
-	return m.WriteTo(data)
+	if err := m.WriteTo(data); err != nil {
+		return err
+	}
+
+	data, err := m.ReadN()
+	if err != nil {
+		return err
+	}
+
+	if data[0] != extended {
+		return errors.New("data 0 err")
+	}
+	if data[1] != 0 {
+		return errors.New("data 1 err")
+	}
+	return m.onExtHandshake(data[2:])
 }
 
 func (m *Meta) HandShake() error {
@@ -279,12 +289,10 @@ func (mw *Meta) requestPiece(i int) {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteByte(extended)
 	buf.WriteByte(byte(mw.utMetadata))
-	//buf.WriteByte(2)
 	buf.Write(bencode.Encode(map[string]interface{}{
 		"msg_type": 0,
 		"piece":    i,
 	}))
-	//fmt.Println(buf.String())
 	err := mw.WriteTo(buf.Bytes())
 	if err != nil {
 		fmt.Println("write err :", err.Error())

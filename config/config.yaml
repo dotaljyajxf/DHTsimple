@@ -1,0 +1,15 @@
+
+host: 0.0.0.0:12121
+per_second_send_limit: 1000
+
+request_buf_len: 1024
+response_buf_len: 1024
+data_buf_len: 1024
+
+connect_timeout: 15
+hand_timeout: 20
+read_timeout: 30
+write_timeout: 30
+
+load_buf_len: 1024
+mongo_uri: "mongodb://user:pwd@ip:port/db"
