@@ -1,8 +1,8 @@
 package load
 
 import (
+	"DHTsimple/common"
 	"DHTsimple/config"
-	"DHTsimple/dht"
 	"bytes"
 	"crypto/sha1"
 	"encoding/binary"
@@ -38,8 +38,8 @@ func NewMeta(addr string, hash []byte) *Meta {
 	return &Meta{
 		addr:      addr,
 		infoHash:  hash,
-		peerId:    dht.RandString(20),
-		preHeader: dht.MakePreHeader(),
+		peerId:    common.RandString(20),
+		preHeader: common.MakePreHeader(),
 	}
 }
 

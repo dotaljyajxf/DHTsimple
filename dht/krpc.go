@@ -1,6 +1,7 @@
 package dht
 
 import (
+	"DHTsimple/common"
 	"DHTsimple/config"
 	"DHTsimple/load"
 	"bytes"
@@ -45,7 +46,7 @@ type DHT struct {
 func NewDHT() *DHT {
 	return &DHT{
 		Host:         config.Conf.Host,
-		Id:           RandString(20),
+		Id:           common.RandString(20),
 		RequestList:  make(chan *FindNodeReq, config.Conf.RequestBufLen),
 		ResponseList: make(chan *Response, config.Conf.ResponseBufLen),
 		DataList:     make(chan map[string]interface{}, config.Conf.DataBufLen),
@@ -87,7 +88,7 @@ func (d *DHT) seedLoop() {
 func (d *DHT) addSend() {
 	for _, addr := range seed {
 
-		req := MakeRequest("find_node", d.Id, "")
+		req := common.MakeRequest("find_node", d.Id, "")
 		findNodeReq := &FindNodeReq{addr, req}
 		d.RequestList <- findNodeReq
 	}
@@ -133,7 +134,7 @@ func (d *DHT) sendResponse() {
 		select {
 		case resp := <-d.ResponseList:
 
-			r := MakeResponse(resp.T, resp.R)
+			r := common.MakeResponse(resp.T, resp.R)
 			_, err := d.Conn.WriteToUDP(bencode.Encode(r), resp.Addr)
 			if err != nil {
 				fmt.Printf("sendResponse err:%s", err.Error())
@@ -248,8 +249,8 @@ func (d *DHT) doGetPeer(addr *net.UDPAddr, t string, arg map[string]interface{})
 
 	r := make(map[string]interface{})
 	r["nodes"] = ""
-	r["token"] = MakeToken(addr.String())
-	r["id"] = NeighborId(d.Id, infoHash)
+	r["token"] = common.MakeToken(addr.String())
+	r["id"] = common.NeighborId(d.Id, infoHash)
 	resp := &Response{Addr: addr, T: t, R: r}
 
 	d.ResponseList <- resp
@@ -318,7 +319,7 @@ func (d *DHT) decodeNodes(r map[string]interface{}) {
 			continue
 		}
 		addr := ip + ":" + strconv.Itoa(int(port))
-		r := MakeRequest("find_node", d.Id, id)
+		r := common.MakeRequest("find_node", d.Id, id)
 		req := &FindNodeReq{Addr: addr, Req: r}
 		d.RequestList <- req
 	}
