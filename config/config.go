@@ -24,7 +24,7 @@ type Config struct {
 var Conf Config
 
 func init() {
-	fp, err := os.OpenFile("./config.yaml", os.O_RDONLY, 0664)
+	fp, err := os.OpenFile("config.yaml", os.O_RDONLY, 0664)
 	if err != nil {
 		fmt.Println("open config file err:", err.Error())
 		return
