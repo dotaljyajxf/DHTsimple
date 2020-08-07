@@ -4,16 +4,22 @@ host: 0.0.0.0:12121
 #每秒发出的数据包限制
 per_second_send_limit: 1000
 
+#find_node请求队列长度
 request_buf_len: 1024
+#节点响应队列长度
 response_buf_len: 1024
+#数据处理队列长度
 data_buf_len: 1024
 
 #下载时的连接超时
 connect_timeout: 15
 #握手超时
 hand_timeout: 20
+#下载读超时
 read_timeout: 30
+#下载写超时
 write_timeout: 30
 
+#待下载队列长度
 load_buf_len: 1024
 mongo_uri: "mongodb://user:pwd@ip:port/db"
