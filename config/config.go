@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"gopkg.in/yaml.v2"
 )
@@ -24,7 +25,8 @@ type Config struct {
 var Conf Config
 
 func init() {
-	fp, err := os.OpenFile("config.yaml", os.O_RDONLY, 0664)
+	dir, _ := os.Getwd()
+	fp, err := os.OpenFile(path.Join(dir, "config.yaml"), os.O_RDONLY, 0664)
 	if err != nil {
 		fmt.Println("open config file err:", err.Error())
 		return
