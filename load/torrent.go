@@ -11,15 +11,15 @@ import (
 )
 
 type tfile struct {
-	Name   string `bson:"file_name"`
-	Length int64  `bson:"file_len"`
+	Name   string `bson:"file_name",json:"file_name"`
+	Length int64  `bson:"file_len",json:"file_len"`
 }
 
 type Torrent struct {
-	HashHex string   `bson:"hash"`
-	Name    string   `bson:"name"`
-	Length  int64    `bson:"len"`
-	Files   []*tfile `bson:"files"`
+	HashHex string   `bson:"hash",json:"hash"`
+	Name    string   `bson:"name",json:"name"`
+	Length  int64    `bson:"len",json:"len"`
+	Files   []*tfile `bson:"files",json:"files"`
 }
 
 type HashPair struct {

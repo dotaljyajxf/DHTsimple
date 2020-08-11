@@ -19,6 +19,9 @@ type Config struct {
 	WriteTimeout       int    `yaml:"write_timeout"`
 	LoadBufLen         int    `yaml:"load_buf_len"`
 	MongoUri           string `yaml:"mongo_uri"`
+	ElasticUrl         string `yaml:"elastic_url"`
+	ElasticName        string `yaml:"elastic_name"`
+	ElasticPwd         string `yaml:"elastic_pwd"`
 }
 
 var Conf Config

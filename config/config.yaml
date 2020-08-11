@@ -22,4 +22,8 @@ write_timeout: 30
 
 #待下载队列长度
 load_buf_len: 1024
+
 mongo_uri: "mongodb://user:pwd@ip:port/db"
+elastic_url: "http://127.0.0.1:9200/"
+elastic_name: "name"
+elastic_pwd: "pwd"
