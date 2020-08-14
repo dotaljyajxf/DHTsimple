@@ -21,6 +21,7 @@ func init() {
 		elastic.SetURL(config.Conf.ElasticUrl),
 		elastic.SetBasicAuth(config.Conf.ElasticName, config.Conf.ElasticPwd),
 		//elastic.SetErrorLog(os.Stdout),
+		elastic.SetSniff(false),
 	)
 	if err != nil {
 		fmt.Println("open elastic err:", err.Error())
