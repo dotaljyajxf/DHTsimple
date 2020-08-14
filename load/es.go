@@ -36,7 +36,10 @@ func InsertToEs(t *Torrent) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	_, err = esClient.Index().Index(INDEX).Id(t.HashHex).BodyString(string(codeT)).Do(ctx)
+
+	index := fmt.Sprintf("torrent-%s", time.Now().Add(-24*time.Hour).Format("20060102"))
+
+	_, err = esClient.Index().Index(index).Id(t.HashHex).BodyString(string(codeT)).Do(ctx)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -47,8 +50,9 @@ func GetHashInfo(name string) {
 	//短语搜索 搜索about字段中有 name
 	matchQuery := elastic.NewMatchQuery("name", name)
 
-	nestedQuery := elastic.NewMatchQuery("file_name", name)
+	nestedQuery := elastic.NewMatchQuery("files.file_name", name)
 	nestedQ := elastic.NewNestedQuery("files", nestedQuery)
+
 	searchQuery := elastic.NewBoolQuery().Should(matchQuery, nestedQ)
 	res, err := esClient.Search(INDEX).Query(searchQuery).Do(context.Background())
 	if err != nil {

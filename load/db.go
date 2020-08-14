@@ -3,7 +3,6 @@ package load
 import (
 	"DHTsimple/config"
 	"fmt"
-	"time"
 
 	"gopkg.in/mgo.v2/bson"
 
@@ -17,7 +16,7 @@ const DB_COLLECTION = "torrent_hash"
 
 func init() {
 	var err error
-	mdb, err = mgo.DialWithTimeout(config.Conf.MongoUri, 3*time.Second)
+	mdb, err = mgo.Dial(config.Conf.MongoUri)
 	if err != nil {
 		fmt.Printf("dail mgo err : %s\n", err.Error())
 		return
