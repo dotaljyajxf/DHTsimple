@@ -144,8 +144,8 @@ func (m *Meta) SetDeadLine(readTimeout int, writeTimeout int) {
 
 func (m *Meta) Connect() error {
 	var err error
-	//m.conn, err = net.DialTimeout("tcp", m.addr, time.Duration(config.Conf.ConnectTimeout)*time.Second)
-	m.conn, err = net.Dial("tcp", m.addr)
+	m.conn, err = net.DialTimeout("tcp", m.addr, time.Duration(config.Conf.ConnectTimeout)*time.Second)
+	//m.conn, err = net.Dial("tcp", m.addr)
 	if err != nil {
 		return err
 	}
