@@ -1,6 +1,7 @@
 package config
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -27,6 +28,9 @@ type Config struct {
 var Conf Config
 
 func init() {
+	limit := flag.Int("-l", 1000, "l 900")
+	flag.Parse()
+
 	fp, err := os.OpenFile("./config.yaml", os.O_RDONLY, 0664)
 	if err != nil {
 		fmt.Println("open config file err:", err.Error())
@@ -38,4 +42,8 @@ func init() {
 	if err != nil {
 		fmt.Println("decode config err:", err.Error())
 	}
+	if *limit != 0 {
+		Conf.PerSecondSendLimit = *limit
+	}
+
 }
